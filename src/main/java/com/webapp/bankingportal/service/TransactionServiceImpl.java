@@ -1,5 +1,8 @@
 package com.webapp.bankingportal.service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,30 @@ public class TransactionServiceImpl implements TransactionService {
 
         return transactionDTOs;
     }
+    @Override
+    public List<TransactionDTO> getTransactionsByDateRange(
+            String accountNumber, LocalDate startDate, LocalDate endDate) {
+
+        if (accountNumber == null || accountNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Account number must not be null or empty");
+        }
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date must not be null");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date must not be after end date");
+        }
+
+        // Convert inclusive LocalDate range to a Date range covering the full end day
+        Date start = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date end = Date.from(endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        return getAllTransactionsByAccountNumber(accountNumber).stream()
+                .filter(txn -> !txn.getTransactionDate().before(start)
+                        && txn.getTransactionDate().before(end))
+                .collect(Collectors.toList());
+    }
+
     public void sendBankStatementByEmail(String accountNumber) {
         if (accountNumber == null || accountNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("Account number must not be null or empty");

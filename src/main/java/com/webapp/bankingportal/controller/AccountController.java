@@ -1,9 +1,11 @@
 package com.webapp.bankingportal.controller;
 
+import java.time.LocalDate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.format.annotation.DateTimeFormat;
 import com.webapp.bankingportal.dto.AmountRequest;
 import com.webapp.bankingportal.dto.FundTransferRequest;
 import com.webapp.bankingportal.dto.PinRequest;
@@ -97,6 +99,18 @@ public class AccountController {
                 .getAllTransactionsByAccountNumber(LoggedinUser.getAccountNumber());
         return ResponseEntity.ok(JsonUtil.toJson(transactions));
     }
+
+    @GetMapping("/transactions/filter")
+    public ResponseEntity<String> getTransactionsByDateRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        val transactions = transactionService.getTransactionsByDateRange(
+                LoggedinUser.getAccountNumber(), startDate, endDate);
+
+        return ResponseEntity.ok(JsonUtil.toJson(transactions));
+    }
+
     @GetMapping("/send-statement")
     public ResponseEntity<String> sendBankStatement() {
         String accountNumber = LoggedinUser.getAccountNumber(); // Get logged-in user account
